@@ -1,8 +1,8 @@
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::net::TcpListener;
+use uuid::Uuid;
 use zero2prod::config::{get_config, DatabaseSettings};
 use zero2prod::startup::run;
-use uuid::Uuid;
 
 pub struct TestApp {
     pub address: String,
@@ -11,17 +11,14 @@ pub struct TestApp {
 
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     // Create test database
-    let mut connection = PgConnection::connect(
-        &config.connection_string_without_db()
-    )
-    .await
-    .expect("Failed to connect to Postgres");
+    let mut connection = PgConnection::connect(&config.connection_string_without_db())
+        .await
+        .expect("Failed to connect to Postgres");
 
-    connection.execute(
-        format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str()
-    )
-    .await
-    .expect("Failed to create database");
+    connection
+        .execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
+        .await
+        .expect("Failed to create database");
 
     // Migrate database
     let connection_pool = PgPool::connect(&config.connection_string())
